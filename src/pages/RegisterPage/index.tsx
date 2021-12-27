@@ -17,6 +17,7 @@ import {
 } from "@ionic/react";
 import { useRef, useState } from "react";
 import { RouteComponentProps } from "react-router";
+import axios from "axios";
 
 const RegisterPage: React.FC<RouteComponentProps> = ({ history }) => {
   const [error, setError] = useState<string>();
@@ -27,34 +28,50 @@ const RegisterPage: React.FC<RouteComponentProps> = ({ history }) => {
   const passwordInputRef = useRef<HTMLIonInputElement>(null);
   const confirmPasswordInputRef = useRef<HTMLIonInputElement>(null);
 
-  const handleRegister = () => {
-    const firstName = firstNameInputRef.current?.value;
-    const lastName = lastNameInputRef.current?.value;
-    const email = emailInputRef.current?.value;
-    const password = passwordInputRef.current!.value || "";
-    const confirmPassword = confirmPasswordInputRef.current?.value;
+  const handleRegister = async () => {
+    try {
+      const firstName = firstNameInputRef.current?.value;
+      const lastName = lastNameInputRef.current?.value;
+      const email = emailInputRef.current?.value;
+      const password = passwordInputRef.current!.value || "";
+      const confirmPassword = confirmPasswordInputRef.current?.value;
 
-    if (password !== confirmPassword) {
-      setError("Passwords don't match");
-      return;
+      if (password !== confirmPassword) {
+        setError("Passwords don't match");
+        return;
+      }
+
+      if (password.toString().length < 8) {
+        setError("Password must be at least 8 characters long");
+        return;
+      }
+
+      const userData = {
+        name: firstName,
+        email,
+        password,
+      };
+
+      const response = await axios({
+        method: "post",
+        url: "http://127.0.0.1:8000/api/register",
+        data: userData,
+        validateStatus: function (status) {
+          return status === 201; // default
+        },
+      });
+
+      const { status, data } = response;
+      // handle correct registration
+      if (status === 201) {
+        history.push("/login");
+        console.log(data);
+      }
+
+      resetInputs();
+    } catch (err) {
+      console.log(err);
     }
-
-    if (password.toString().length < 8) {
-      setError("Password must be at least 8 characters long");
-      return;
-    }
-
-    const userData = {
-      firstName,
-      lastName,
-      email,
-      password,
-    };
-
-    console.log(userData);
-
-    history.push("/login");
-    resetInputs();
   };
 
   const resetInputs = () => {

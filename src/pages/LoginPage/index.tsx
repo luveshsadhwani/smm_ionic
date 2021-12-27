@@ -17,6 +17,7 @@ import {
 } from "@ionic/react";
 import { useRef, useState } from "react";
 import { RouteComponentProps } from "react-router";
+import axios from "axios";
 
 const LoginPage: React.FC<RouteComponentProps> = ({ history }) => {
   const [error, setError] = useState<string>();
@@ -24,20 +25,45 @@ const LoginPage: React.FC<RouteComponentProps> = ({ history }) => {
   const emailInputRef = useRef<HTMLIonInputElement>(null);
   const passwordInputRef = useRef<HTMLIonInputElement>(null);
 
-  const handleLogin = () => {
-    const EMAIL_01 = "luveshs@gmail.com";
-    const PASSWORD_01 = "urdad";
+  const handleLogin = async () => {
+    try {
+      const email = emailInputRef.current?.value;
+      const password = passwordInputRef.current?.value;
 
-    const email = emailInputRef.current?.value;
-    const password = passwordInputRef.current?.value;
+      if (!email || !password) {
+        setError("Please fill in email & password");
+        return;
+      }
 
-    if (email !== EMAIL_01 && password !== PASSWORD_01) {
-      setError("Email/Password is invalid");
-      return;
+      const response = await axios({
+        method: "post",
+        url: "http://127.0.0.1:8000/api/login",
+        data: {
+          email,
+          password,
+        },
+        validateStatus: function (status) {
+          return status === 200 || status === 401; // default
+        },
+      });
+
+      const { status, data } = response;
+      // handle correct login
+      if (status === 200) {
+        history.push("/dashboard");
+        console.log(data);
+      }
+
+      // handle unauthenticated user
+      if (status === 401) {
+        setError(data.message);
+        console.log(data);
+      }
+
+      resetInputs();
+    } catch (err) {
+      console.log(err);
     }
-
-    history.push("/dashboard");
-    resetInputs();
   };
 
   const resetInputs = () => {
