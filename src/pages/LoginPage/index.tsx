@@ -25,6 +25,10 @@ const LoginPage: React.FC<RouteComponentProps> = ({ history }) => {
   const emailInputRef = useRef<HTMLIonInputElement>(null);
   const passwordInputRef = useRef<HTMLIonInputElement>(null);
 
+  const saveJwtToStorage = (token: string) => {
+    localStorage.setItem("token", token);
+  };
+
   const handleLogin = async () => {
     try {
       const email = emailInputRef.current?.value;
@@ -50,6 +54,8 @@ const LoginPage: React.FC<RouteComponentProps> = ({ history }) => {
       const { status, data } = response;
       // handle correct login
       if (status === 200) {
+        const { token } = data.data;
+        saveJwtToStorage(token);
         history.push("/dashboard");
         console.log(data);
       }
